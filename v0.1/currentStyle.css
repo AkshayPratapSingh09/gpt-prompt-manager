@@ -1,0 +1,339 @@
+/* trialStyle.css */
+
+.prompt-manager-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  .prompt-manager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #19c37d;
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-weight: 600;
+    max-width: 90%;
+    gap: 12px;
+    color: white;
+  }
+  
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+  }
+  
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 20px;
+  }
+  
+  .toggle-switch input:checked + .slider {
+    background-color: #45f26d;
+  }
+  
+  .prompt-info,
+  .var-info {
+    font-size: 14px;
+  }
+  
+  .count-badge {
+    background-color: black;
+    color: white;
+    border-radius: 12px;
+    padding: 2px 6px;
+    margin-left: 4px;
+    font-size: 12px;
+  }
+  
+  .expand-toggle {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 2px 6px;
+    color: white;
+  }
+  
+  .prompt-manager-content {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+    background: white;
+    border-radius: 15px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    width: 90%;
+    max-width: 48rem;
+  }
+  
+  .prompt-manager-content.expanded {
+    display: flex;
+  }
+  
+  .tabs-header {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid #eee;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  
+  .tab {
+    padding: 8px 16px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #555;
+    background: #f5f5f5;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    position: relative;
+  }
+  
+  .tab.active {
+    color: #19c37d;
+    background: white;
+    border-bottom: 2px solid #19c37d;
+  }
+  
+  .tab-content {
+    display: none;
+    padding-top: 16px;
+  }
+  
+  .tab-content.active {
+    display: block;
+  }
+  
+  .close-tab {
+    margin-left: 8px;
+    color: #999;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .prompt-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+  
+  .prompt-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .prompt-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .prompt-card-body {
+    color: #555;
+    font-size: 14px;
+  }
+  
+  .prompt-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+  
+  .edit-btn {
+    background: #eee;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+  
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    margin-left: 10px;
+  }
+  
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .slider.round {
+    border-radius: 20px;
+  }
+  
+  .slider.round:before {
+    border-radius: 50%;
+  }
+  
+  .switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 20px;
+  }
+  
+  .switch .slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+  }
+  
+  .switch input:checked + .slider {
+    background-color: #19c37d;
+  }
+  
+  .switch input:checked + .slider:before {
+    transform: translateX(16px);
+  }
+  
+  .add-prompt-btn {
+    margin-top: 20px;
+    padding: 8px 16px;
+    background: #19c37d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .add-prompt-btn:hover {
+    background: #16a34a;
+  }
+  
+  .prompt-title-input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  
+  .prompt-input {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    background: #eee;
+  }
+  
+  .variable-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  
+  .variable-row input[type="text"] {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: #f0f0f0;
+  }
+  
+  .toggle-wrapper {
+    display: flex;
+    align-items: center;
+  }
+  
+  .toggle-wrapper input[type="checkbox"] {
+    transform: scale(1.2);
+  }
+  
+  .delete-var-btn {
+    background: #ff4d4f;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: auto;
+    transition: background 0.3s;
+  }
+  
+  .delete-var-btn:hover {
+    background: #d9363e;
+  }
+  
+  .submit-btn {
+    align-self: flex-end;
+    padding: 6px 14px;
+    border: 1px solid black;
+    border-radius: 20px;
+    background: white;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+  }
+  
+  .submit-btn:hover {
+    background: #f0f0f0;
+  }
+  
+  .scrollable-cards {
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 8px;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    scroll-behavior: smooth;
+  }
+  
+  .scrollable-cards::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollable-cards::-webkit-scrollbar-thumb {
+    background-color: #bbb;
+    border-radius: 6px;
+  }
+  
+  .scrollable-cards::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
