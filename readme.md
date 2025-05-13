@@ -1,4 +1,3 @@
-
 # 🚀 GPT Prompt Manager Extension
 
 <p align="center">
@@ -24,7 +23,8 @@ A sleek and powerful Chrome extension that enhances your ChatGPT experience by a
 ---
 
 ## 📸 Screenshots
-
+![Screenshot 2025-05-14 032143](https://github.com/user-attachments/assets/26cdb78d-5c03-4c6d-aae4-5808608d1a61)
+![Screenshot 2025-05-14 032223](https://github.com/user-attachments/assets/bb621a34-082c-40a5-b6b8-c0ec93df2094)
 
 
 ---
