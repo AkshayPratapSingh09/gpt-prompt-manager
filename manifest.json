@@ -2,6 +2,9 @@
   "manifest_version": 3,
   "name": "GPT Prompt Manager",
   "version": "1.0",
+  "permissions": [
+    "storage"
+  ],
   "description": "Adds a prompt manager on top of GPT providing accessiblity and increasing efficiency ",
   "author": "Akshay Pratap Singh (https://github.com/AkshayPratapSingh09)",
   "homepage_url": "https://github.com/AkshayPratapSingh09/gpt-prompt-manager",

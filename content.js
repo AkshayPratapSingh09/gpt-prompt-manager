@@ -4,33 +4,73 @@
 // • prompt & var counters
 // • delete-card button
 // • counters auto‐updated on add/delete/toggle
+// • local persistence via chrome.storage.local
 
 /* ---------------------------------------------------------------------
  * 0. CONSTANTS & GLOBALS
  * ------------------------------------------------------------------ */
 const COMPOSER_P_SELECTOR = 'p[data-placeholder="Ask anything"]';
-let activeCardId = null; // which prompt-card currently owns the composer
+let activeCardId = null;      // which prompt-card currently owns the composer
+let promptsData = [];         // in-memory array of { id, title, body, varMap }
+
+/** Default prompts on first install */
+const defaultPrompts = [
+  {
+    id: 'card-1',
+    title: 'Professional Email',
+    body: 'Write a professional email to {{%RECIPIENT%}} regarding {{%SUBJECT%}}. The tone should be {{%TONE%}}...',
+    varMap: {}
+  },
+  {
+    id: 'card-2',
+    title: 'Code Review',
+    body: 'Review the following {{%LANGUAGE%}} code for: 1. Code quality 2. Performance 3. Security issues.',
+    varMap: {}
+  },
+  {
+    id: 'card-3',
+    title: 'Blog Post',
+    body: 'Write a blog post about {{%TOPIC%}} with {{%STYLE%}} style for {{%AUDIENCE%}}.',
+    varMap: {}
+  }
+];
 
 /* ---------------------------------------------------------------------
- * 0.5 COUNTER HELPERS
+ * 0.5 STORAGE HELPERS
+ * ------------------------------------------------------------------ */
+/** Load prompts array from storage, fallback to defaults */
+function loadPrompts() {
+  return new Promise(resolve => {
+    chrome.storage.local.get('prompts', data => {
+      if (Array.isArray(data.prompts) && data.prompts.length) {
+        resolve(data.prompts);
+      } else {
+        resolve(defaultPrompts);
+      }
+    });
+  });
+}
+/** Persist current promptsData back to storage */
+function savePrompts() {
+  chrome.storage.local.set({ prompts: promptsData });
+}
+
+/* ---------------------------------------------------------------------
+ * 0.6 COUNTER HELPERS
  * ------------------------------------------------------------------ */
 function updatePromptCount() {
   const badge = document.getElementById('prompt-count');
-  badge.textContent = document.querySelectorAll('.prompt-card').length;
+  if (badge) badge.textContent = promptsData.length;
 }
 function updateVarCount() {
   const badge = document.getElementById('var-count');
+  if (!badge) return;
   if (!activeCardId) {
     badge.textContent = 0;
     return;
   }
-  const card = document.querySelector(`.prompt-card[data-card-id="${activeCardId}"]`);
-  if (!card) {
-    badge.textContent = 0;
-    return;
-  }
-  const vars = extractVariables(card.querySelector('.prompt-card-body').textContent);
-  badge.textContent = vars.length;
+  const card = promptsData.find(p => p.id === activeCardId);
+  badge.textContent = card ? extractVariables(card.body).length : 0;
 }
 
 /* ---------------------------------------------------------------------
@@ -87,11 +127,7 @@ function createPromptManager() {
       </div>
       <div class="tab-content active" id="tab-home">
         <div class="tab-title">Prompt Manager</div>
-        <div class="prompt-cards scrollable-cards" id="prompt-cards">
-          ${createPromptCard('Professional Email','Write a professional email to {{%RECIPIENT%}} regarding {{%SUBJECT%}}. The tone should be {{%TONE%}}...',3,'card-1',{})}
-          ${createPromptCard('Code Review','Review the following {{%LANGUAGE%}} code for: 1. Code quality 2. Performance 3. Security issues.',1,'card-2',{})}
-          ${createPromptCard('Blog Post','Write a blog post about {{%TOPIC%}} with {{%STYLE%}} style for {{%AUDIENCE%}}.',3,'card-3',{})}
-        </div>
+        <div class="prompt-cards scrollable-cards" id="prompt-cards"></div>
         <button class="add-prompt-btn" id="add-prompt-btn">Add New Prompt</button>
       </div>
     </div>
@@ -100,8 +136,8 @@ function createPromptManager() {
 }
 
 function createPromptCard(title, body, variableCount, id, varMap = {}) {
-  const dataVars = JSON.stringify(varMap);
   const length = body.length;
+  const dataVars = JSON.stringify(varMap);
   return `
 <div class="prompt-card" data-card-id="${id}" data-variables='${dataVars}'>
   <div class="prompt-card-header">
@@ -114,10 +150,22 @@ function createPromptCard(title, body, variableCount, id, varMap = {}) {
   <div class="prompt-card-body">${body}</div>
   <div class="prompt-card-footer">
     ${variableCount} variables | ${length} chars
-    <button class="edit-btn" data-title="${encodeURIComponent(title)}" data-body="${encodeURIComponent(body)}" data-id="${id}">Edit</button>
+    <button class="edit-btn" data-id="${id}">Edit</button>
     <button class="edit-btn delete-btn" data-id="${id}">Delete</button>
   </div>
 </div>`;
+}
+
+function renderPromptCards() {
+  const container = document.getElementById('prompt-cards');
+  container.innerHTML = '';
+  promptsData.forEach(p => {
+    const varCount = extractVariables(p.body).length;
+    container.insertAdjacentHTML('beforeend',
+      createPromptCard(p.title, p.body, varCount, p.id, p.varMap));
+  });
+  updatePromptCount();
+  updateVarCount();
 }
 
 /* ---------------------------------------------------------------------
@@ -201,7 +249,7 @@ function createEditTab(tabId = `edit-${Date.now()}`, title = 'New Prompt', body 
   setupTabSwitching();
   activateTab(tabHeader);
 
-  // variable sync
+  // sync variable rows
   tabContent.querySelector('.prompt-input').addEventListener('input', () => {
     const now = extractVariables(tabContent.querySelector('.prompt-input').value);
     const existing = [...tabContent.querySelectorAll('.variable-row')].map(r => r.dataset.var);
@@ -218,12 +266,13 @@ function createEditTab(tabId = `edit-${Date.now()}`, title = 'New Prompt', body 
     });
   });
 
-  // submit changes
+  // handle submit (add/edit)
   tabContent.querySelector('.submit-btn').addEventListener('click', () => {
     const newTitle = tabContent.querySelector('.prompt-title-input').value.trim();
     const newBody  = tabContent.querySelector('.prompt-input').value.trim();
     const newVars  = extractVariables(newBody);
 
+    // build varMap
     const updatedMap = {};
     tabContent.querySelectorAll('.variable-row').forEach(row => {
       const key    = row.dataset.var;
@@ -232,21 +281,26 @@ function createEditTab(tabId = `edit-${Date.now()}`, title = 'New Prompt', body 
       if (en && val && val.toLowerCase() !== 'null') updatedMap[key] = val;
     });
 
-    const cards = document.getElementById('prompt-cards');
     if (cardId) {
-      const card = cards.querySelector(`[data-card-id="${cardId}"]`);
-      if (card) card.outerHTML = createPromptCard(newTitle, newBody, newVars.length, cardId, updatedMap);
+      // edit existing
+      const idx = promptsData.findIndex(p => p.id === cardId);
+      if (idx >= 0) {
+        promptsData[idx] = { id: cardId, title: newTitle, body: newBody, varMap: updatedMap };
+      }
     } else {
+      // add new
       const newId = `card-${Date.now()}`;
-      cards.insertAdjacentHTML('beforeend',
-        createPromptCard(newTitle, newBody, newVars.length, newId, updatedMap));
+      promptsData.push({ id: newId, title: newTitle, body: newBody, varMap: updatedMap });
     }
 
+    // persist + rerender
+    savePrompts();
+    renderPromptCards();
+
+    // close tab
     document.querySelector(`.tab[data-tab="${tabId}"]`).remove();
     tabContent.remove();
     activateTab(document.querySelector('.tab[data-tab="tab-home"]'));
-    updatePromptCount();
-    updateVarCount();
   });
 }
 
@@ -258,7 +312,7 @@ function setupEventListeners() {
   const expandBtn   = document.getElementById('expand-toggle');
   const contentPane = document.getElementById('prompt-manager-content');
 
-  // conditional expand/collapse
+  // expand/collapse only if mainToggle is on
   expandBtn.addEventListener('click', e => {
     if (!mainToggle.checked) return;
     contentPane.classList.toggle('expanded');
@@ -271,54 +325,50 @@ function setupEventListeners() {
     }
   });
 
-  // add new prompt
-  document.getElementById('add-prompt-btn').addEventListener('click', () => {
-    createEditTab();
-  });
+  // Add new prompt
+  document.getElementById('add-prompt-btn').addEventListener('click', () => createEditTab());
 
-  // delegated click: edit, delete-var, delete-card, close-tab
-  document.addEventListener('click', e => {
-    if (e.target.classList.contains('edit-btn') && !e.target.classList.contains('delete-btn')) {
-      const btn    = e.target;
-      const card   = btn.closest('.prompt-card');
-      const varMap = JSON.parse(card.getAttribute('data-variables')||'{}');
-      createEditTab(undefined,
-        decodeURIComponent(btn.dataset.title),
-        decodeURIComponent(btn.dataset.body),
-        btn.dataset.id,
-        varMap);
+  // Delegated clicks: edit, delete-card, delete-var, close-tab
+  document.addEventListener('click', async e => {
+    const btn = e.target;
+
+    if (btn.classList.contains('delete-btn')) {
+      // delete card
+      const id = btn.dataset.id;
+      promptsData = promptsData.filter(p => p.id !== id);
+      savePrompts();
+      renderPromptCards();
+      if (activeCardId === id) { clearComposer(); activeCardId = null; }
     }
-    if (e.target.classList.contains('delete-var-btn')) {
-      e.target.closest('.variable-row')?.remove();
+
+    if (btn.classList.contains('edit-btn') && !btn.classList.contains('delete-btn')) {
+      // edit card
+      const id = btn.dataset.id;
+      const p  = promptsData.find(x => x.id === id);
+      createEditTab(undefined, p.title, p.body, id, p.varMap);
     }
-    if (e.target.classList.contains('delete-btn')) {
-      const card = e.target.closest('.prompt-card');
-      const id   = card.dataset.cardId;
-      card.remove();
-      if (activeCardId===id) {
-        clearComposer();
-        activeCardId=null;
-      }
-      updatePromptCount();
-      updateVarCount();
+
+    if (btn.classList.contains('delete-var-btn')) {
+      btn.closest('.variable-row')?.remove();
     }
-    if (e.target.classList.contains('close-tab')) {
+
+    if (btn.classList.contains('close-tab')) {
       e.stopPropagation();
-      const tab = e.target.closest('.tab');
+      const tab = btn.closest('.tab');
       document.getElementById(tab.dataset.tab)?.remove();
       tab.remove();
       activateTab(document.querySelector('.tab[data-tab="tab-home"]'));
     }
   });
 
-  // prompt toggle with substitution
+  // Prompt-card toggle substitution
   document.addEventListener('change', async e => {
     if (!e.target.matches('.prompt-card-header input[type="checkbox"]')) return;
     const cb   = e.target;
     const card = cb.closest('.prompt-card');
     const id   = card.dataset.cardId;
     let text   = card.querySelector('.prompt-card-body').textContent.trim();
-    const varMap = JSON.parse(card.getAttribute('data-variables')||'{}');
+    const varMap = promptsData.find(p => p.id === id)?.varMap || {};
     Object.keys(varMap).forEach(k => {
       text = text.split(`{{%${k}%}}`).join(varMap[k]);
     });
@@ -326,16 +376,16 @@ function setupEventListeners() {
     await waitForComposerForm();
 
     if (cb.checked) {
-      if (activeCardId && activeCardId!==id) {
+      if (activeCardId && activeCardId !== id) {
         const prev = document.querySelector(`.prompt-card[data-card-id="${activeCardId}"] input[type="checkbox"]`);
-        if (prev) prev.checked=false;
+        if (prev) prev.checked = false;
         clearComposer();
       }
-      activeCardId=id;
+      activeCardId = id;
       setComposerText(text);
     } else {
       clearComposer();
-      activeCardId=null;
+      activeCardId = null;
     }
     updateVarCount();
   });
@@ -346,16 +396,25 @@ function setupEventListeners() {
  * ------------------------------------------------------------------ */
 async function insertPromptManager() {
   const form = await waitForComposerForm();
-  if (!form||document.querySelector('.prompt-manager-container')) return;
-  const wrapper=document.createElement('div');
-  wrapper.innerHTML=createPromptManager();
-  form.parentElement.insertBefore(wrapper,form);
+  if (!form || document.querySelector('.prompt-manager-container')) return;
 
+  // load persisted prompts
+  promptsData = await loadPrompts();
+
+  // inject UI
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = createPromptManager();
+  form.parentElement.insertBefore(wrapper, form);
+
+  renderPromptCards();
   setupEventListeners();
   setupTabSwitching();
   updatePromptCount();
   updateVarCount();
 }
 
-document.addEventListener('DOMContentLoaded',insertPromptManager);
-new MutationObserver(insertPromptManager).observe(document.body,{childList:true,subtree:true});
+document.addEventListener('DOMContentLoaded', insertPromptManager);
+new MutationObserver(insertPromptManager).observe(document.body, {
+  childList: true,
+  subtree: true
+});
