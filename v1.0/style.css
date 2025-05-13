@@ -1,8 +1,4 @@
 /* trialStyle.css */
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/* 1. CORE STYLES – unchanged                                          */
-/* ──────────────────────────────────────────────────────────────────────── */
 .prompt-manager-container {
   display: flex;
   flex-direction: column;
@@ -40,7 +36,10 @@
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: #ccc;
   transition: 0.4s;
   border-radius: 20px;
@@ -200,7 +199,10 @@
 .switch .slider {
   position: absolute;
   cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: #ccc;
   transition: 0.4s;
   border-radius: 20px;
@@ -333,102 +335,4 @@
 
 .scrollable-cards::-webkit-scrollbar-track {
   background-color: transparent;
-}
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/* 2. DARK MODE OVERRIDES – only colors                                    */
-/* ──────────────────────────────────────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  .prompt-manager {
-    background-color: #0e4028;
-    color: #e0e0e0;
-  }
-  .toggle-switch input:checked + .slider {
-    background-color: #3aff66;
-  }
-  .slider {
-    background-color: #555;
-  }
-
-  .prompt-info,
-  .var-info {
-    color: #ccc;
-  }
-  .count-badge {
-    background-color: #222;
-    color: #fff;
-  }
-  .expand-toggle {
-    color: #e0e0e0;
-  }
-
-  .prompt-manager-content {
-    background: #1a1a1a;
-    border-color: #333;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
-  }
-
-  .tab {
-    background: #2a2a2a;
-    color: #bbb;
-  }
-  .tab.active {
-    background: #1a1a1a;
-    color: #3aff66;
-    border-bottom-color: #3aff66;
-  }
-
-  .prompt-card {
-    background: #1f1f1f;
-    border-color: #333;
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.7);
-  }
-  .prompt-card-body {
-    color: #ddd;
-  }
-  .prompt-card-footer {
-    color: #aaa;
-  }
-
-  .edit-btn,
-  .delete-var-btn {
-    background: #333;
-    color: #ddd;
-  }
-  .edit-btn:hover,
-  .delete-var-btn:hover {
-    background: #444;
-  }
-
-  .prompt-input,
-  .prompt-title-input,
-  .variable-row input[type="text"] {
-    background: #333;
-    border-color: #555;
-    color: #eee;
-  }
-
-  .add-prompt-btn {
-    background: #29a35c;
-    color: #eee;
-  }
-  .add-prompt-btn:hover {
-    background: #3aff66;
-  }
-
-  .submit-btn {
-    background: #2a2a2a;
-    color: #eee;
-    border-color: #555;
-  }
-  .submit-btn:hover {
-    background: #3a3a3a;
-  }
-
-  .scrollable-cards {
-    border-color: #333;
-  }
-  .scrollable-cards::-webkit-scrollbar-thumb {
-    background-color: #555;
-  }
 }
